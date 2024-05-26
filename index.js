@@ -1,5 +1,4 @@
 const express = require("express");
-const users = require("./MOCK_DATA.json")
 const mongoose = require("mongoose");
 const app = express();
 const fs = require("fs");
@@ -31,39 +30,36 @@ const userSchema = new mongoose.Schema({
   gender: {
     type: String,
   }
-});
+}, { timestamps: true });
 
 const User = mongoose.model("user", userSchema);
 
 app.use(express.urlencoded({ extended: false }));
 
 
-app.get("/api/users", (req, res) => {
-  return res.json(users);
+app.get("/api/users", async (req, res) => {
+  const allDbUsers = await User.find({});
+
+  return res.json(allDbUsers);
 });
 app.
   route("/api/users/:id")
-  .get((req, res) => {
-    const id = Number(req.params.id);
-    const user = users.find((user) => user.id === id);
+  .get(async (req, res) => {
+    const user = await User.findById(req.params.id);
     return res.json(user);
   })
-  .patch((req, res) => {
-    const id = req.params.id;
-    data[id].checked = !data[id].checked;
-    fs.writeFile("./MOCK_DATA.json", JSON.stringify(users), "utf-8",
-      res.json({ status: "sucess" }))
+  .patch(async (req, res) => {
+    await User.findByIdAndUpdate(req.params.id, { last_name: "newLastname" })
+    return res.json({ status: "sucess" })
   })
 
   .delete(async (req, res) => {
-    const response = await fetch("/delete/:id", users);
-    if (response.status != 204) {
-      throw Error("Cannot delete your item from list");
-    }
-    return res.json({
-      status: "pending"
-    })
-  });
+    await User.findByIdAndDelete(req.params.id)
+    return res.json({ status: "success" })
+  }
+
+
+  );
 
 
 app.post("/api/users", async (req, res) => {
@@ -75,7 +71,6 @@ app.post("/api/users", async (req, res) => {
     gender: body.gender,
     Job_tital: body.Job_tital,
   })
-  console.log(result)
   return res.status(201).json({ msg: "success" })
 
 })
